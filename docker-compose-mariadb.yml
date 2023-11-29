@@ -5,11 +5,11 @@ services:
     image: mariadb:10.5
     environment:
       - MARIADB_USER=redmine
-      - MARIADB_PASSWORD=password
+      - MARIADB_PASSWORD=superstrangepass
       - MARIADB_DATABASE=redmine_production
       - MARIADB_RANDOM_ROOT_PASSWORD=1
     volumes:
-      - /srv/docker/redmine/mariadb:/var/lib/mysql
+      - /volume3/docker/redmine/db:/var/lib/mysql
 
   redmine:
     build: ./
@@ -17,7 +17,7 @@ services:
     depends_on:
       - database
     environment:
-      - TZ=Asia/Kolkata
+      - TZ=Europe/Minsk
 
       - DB_ADAPTER=mysql2
       - DB_HOST=database
@@ -29,17 +29,11 @@ services:
 
       - REDMINE_PORT=10083
       - REDMINE_HTTPS=false
-      - REDMINE_RELATIVE_URL_ROOT=
-      - REDMINE_SECRET_TOKEN=
 
       - REDMINE_SUDO_MODE_ENABLED=false
       - REDMINE_SUDO_MODE_TIMEOUT=15
 
       - REDMINE_CONCURRENT_UPLOADS=2
-
-      - REDMINE_BACKUP_SCHEDULE=
-      - REDMINE_BACKUP_EXPIRY=
-      - REDMINE_BACKUP_TIME=
 
       - SMTP_ENABLED=false
       - SMTP_METHOD=smtp
@@ -51,16 +45,8 @@ services:
       - SMTP_STARTTLS=true
       - SMTP_AUTHENTICATION=:login
 
-      - IMAP_ENABLED=false
-      - IMAP_HOST=imap.gmail.com
-      - IMAP_PORT=993
-      - IMAP_USER=mailer@example.com
-      - IMAP_PASS=password
-      - IMAP_SSL=true
-      - IMAP_INTERVAL=30
-
     ports:
-      - "10083:80"
+      - "3434:3000"
     volumes:
-      - /srv/docker/redmine/redmine_mariadb:/home/redmine/data
-      - /srv/docker/redmine/redmine-logs:/var/log/redmine
+      - /volume3/docker/redmine/data:/home/redmine/data
+      - /volume3/docker/redmine/redmine-logs:/var/log/redmine
