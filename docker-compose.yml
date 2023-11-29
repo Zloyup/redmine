@@ -1,71 +1,40 @@
-version: '2.3'
-
+version: "3.9"
 services:
-  postgresql:
-    image: sameersbn/postgresql:14-20230628
+  db:
+    image: mariadb:jammy
+    container_name: Redmine-DB
+    hostname: redmine-db
+    security_opt:
+      - no-new-privileges:true
     environment:
-      - DB_USER=redmine
-      - DB_PASS=password
-      - DB_NAME=redmine_production
+      - TZ=Europe/Minsk
+      - MYSQL_ROOT_PASSWORD=superstrangepass
+      - MYSQL_DATABASE=redmine
+      - MYSQL_USER=redmineuser
+      - MYSQL_PASSWORD=redminepass
     volumes:
-      - /srv/docker/redmine/postgresql:/var/lib/postgresql
-    healthcheck:
-      test: "psql -U postgres"
-      interval: 3s
-      timeout: 3s
-      retries: 5
-      start_period: 10s
+      - /volume3/docker/redmine/db:/var/lib/mysql:rw
+    restart: always
+
   redmine:
-    build: ./
-    image: sameersbn/redmine:5.1.1
-    depends_on:
-      postgresql:
-        condition: service_healthy
+    image: redmine:latest
+    container_name: Redmine
+    hostname: redmine
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
+    user: 1026:100
     environment:
-      - TZ=Asia/Kolkata
-
-      - DB_ADAPTER=postgresql
-      - DB_HOST=postgresql
-      - DB_PORT=5432
-      - DB_USER=redmine
-      - DB_PASS=password
-      - DB_NAME=redmine_production
-      - DB_SSL_MODE=prefer
-
-      - REDMINE_PORT=10083
-      - REDMINE_HTTPS=false
-      - REDMINE_RELATIVE_URL_ROOT=
-      - REDMINE_SECRET_TOKEN=
-
-      - REDMINE_SUDO_MODE_ENABLED=false
-      - REDMINE_SUDO_MODE_TIMEOUT=15
-
-      - REDMINE_CONCURRENT_UPLOADS=2
-
-      - REDMINE_BACKUP_SCHEDULE=
-      - REDMINE_BACKUP_EXPIRY=
-      - REDMINE_BACKUP_TIME=
-
-      - SMTP_ENABLED=false
-      - SMTP_METHOD=smtp
-      - SMTP_DOMAIN=www.example.com
-      - SMTP_HOST=smtp.gmail.com
-      - SMTP_PORT=587
-      - SMTP_USER=mailer@example.com
-      - SMTP_PASS=password
-      - SMTP_STARTTLS=true
-      - SMTP_AUTHENTICATION=:login
-
-      - IMAP_ENABLED=false
-      - IMAP_HOST=imap.gmail.com
-      - IMAP_PORT=993
-      - IMAP_USER=mailer@example.com
-      - IMAP_PASS=password
-      - IMAP_SSL=true
-      - IMAP_INTERVAL=30
-
-    ports:
-      - "10083:80"
+      REDMINE_DB_MYSQL: redmine-db
+      REDMINE_DB_DATABASE: redmine
+      REDMINE_DB_USERNAME: redmineuser
+      REDMINE_DB_PASSWORD: redminepass
     volumes:
-      - /srv/docker/redmine/redmine:/home/redmine/data
-      - /srv/docker/redmine/redmine-logs:/var/log/redmine
+      - /volume3/docker/redmine/data:/usr/src/redmine/files:rw
+    ports:
+      - 3434:3000
+    restart: always
+    depends_on:
+      db:
+        condition: service_started
